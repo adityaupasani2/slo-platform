@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: slo-demo-app
-  namespace: default
+  namespace: monitoring
   labels:
     release: kube-prometheus-stack
 spec:
@@ -10,6 +10,6 @@ spec:
     matchLabels:
       app: slo-demo-app
   endpoints:
-    - port: "8000"
+    - port: http
       path: /metrics
       interval: 15s
