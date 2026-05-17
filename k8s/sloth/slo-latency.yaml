@@ -1,0 +1,25 @@
+version: "prometheus/v1"
+service: "slo-demo-app"
+labels:
+  owner: "platform-team"
+  env: "production"
+slos:
+  - name: "requests-latency"
+    objective: 95.0
+    description: "95% of requests should complete within 200ms"
+    sli:
+      events:
+        error_query: sum(rate(app_request_latency_seconds_bucket{job="slo-demo-app",le="0.2"}[{{.window}}]))
+        total_query: sum(rate(app_request_latency_seconds_count{job="slo-demo-app"}[{{.window}}]))
+    alerting:
+      name: SloLatencyAlert
+      labels:
+        severity: critical
+      annotations:
+        summary: "SLO latency burn rate is too high"
+      page_alert:
+        labels:
+          severity: critical
+      ticket_alert:
+        labels:
+          severity: warning
