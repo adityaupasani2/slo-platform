@@ -1,0 +1,133 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: slo-demo-app-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: sloth-slo-sli-recordings-slo-demo-app-requests-availability
+      rules:
+        - record: slo:sli_error:ratio_rate5m
+          expr: |
+            (sum(rate(app_requests_total{job="slo-demo-app",status=~"5.."}[5m])))
+            /
+            (sum(rate(app_requests_total{job="slo-demo-app"}[5m])))
+          labels:
+            sloth_id: slo-demo-app-requests-availability
+            sloth_service: slo-demo-app
+            sloth_slo: requests-availability
+            sloth_window: 5m
+        - record: slo:sli_error:ratio_rate30m
+          expr: |
+            (sum(rate(app_requests_total{job="slo-demo-app",status=~"5.."}[30m])))
+            /
+            (sum(rate(app_requests_total{job="slo-demo-app"}[30m])))
+          labels:
+            sloth_id: slo-demo-app-requests-availability
+            sloth_service: slo-demo-app
+            sloth_slo: requests-availability
+            sloth_window: 30m
+        - record: slo:sli_error:ratio_rate1h
+          expr: |
+            (sum(rate(app_requests_total{job="slo-demo-app",status=~"5.."}[1h])))
+            /
+            (sum(rate(app_requests_total{job="slo-demo-app"}[1h])))
+          labels:
+            sloth_id: slo-demo-app-requests-availability
+            sloth_service: slo-demo-app
+            sloth_slo: requests-availability
+            sloth_window: 1h
+        - record: slo:sli_error:ratio_rate6h
+          expr: |
+            (sum(rate(app_requests_total{job="slo-demo-app",status=~"5.."}[6h])))
+            /
+            (sum(rate(app_requests_total{job="slo-demo-app"}[6h])))
+          labels:
+            sloth_id: slo-demo-app-requests-availability
+            sloth_service: slo-demo-app
+            sloth_slo: requests-availability
+            sloth_window: 6h
+        - record: slo:sli_error:ratio_rate1d
+          expr: |
+            (sum(rate(app_requests_total{job="slo-demo-app",status=~"5.."}[1d])))
+            /
+            (sum(rate(app_requests_total{job="slo-demo-app"}[1d])))
+          labels:
+            sloth_id: slo-demo-app-requests-availability
+            sloth_service: slo-demo-app
+            sloth_slo: requests-availability
+            sloth_window: 1d
+        - record: slo:sli_error:ratio_rate3d
+          expr: |
+            (sum(rate(app_requests_total{job="slo-demo-app",status=~"5.."}[3d])))
+            /
+            (sum(rate(app_requests_total{job="slo-demo-app"}[3d])))
+          labels:
+            sloth_id: slo-demo-app-requests-availability
+            sloth_service: slo-demo-app
+            sloth_slo: requests-availability
+            sloth_window: 3d
+    - name: sloth-slo-meta-recordings-slo-demo-app-requests-availability
+      rules:
+        - record: slo:objective:ratio
+          expr: vector(0.999)
+          labels:
+            sloth_id: slo-demo-app-requests-availability
+            sloth_service: slo-demo-app
+            sloth_slo: requests-availability
+        - record: slo:error_budget:ratio
+          expr: vector(1-0.999)
+          labels:
+            sloth_id: slo-demo-app-requests-availability
+            sloth_service: slo-demo-app
+            sloth_slo: requests-availability
+        - record: slo:current_burn_rate:ratio
+          expr: |
+            slo:sli_error:ratio_rate5m{sloth_id="slo-demo-app-requests-availability"}
+            / on(sloth_id, sloth_slo, sloth_service) group_left
+            slo:error_budget:ratio{sloth_id="slo-demo-app-requests-availability"}
+          labels:
+            sloth_id: slo-demo-app-requests-availability
+            sloth_service: slo-demo-app
+            sloth_slo: requests-availability
+        - record: slo:period_error_budget_remaining:ratio
+          expr: |
+            1 - (
+              slo:sli_error:ratio_rate1h{sloth_id="slo-demo-app-requests-availability"}
+              / on(sloth_id, sloth_slo, sloth_service) group_left
+              slo:error_budget:ratio{sloth_id="slo-demo-app-requests-availability"}
+            )
+          labels:
+            sloth_id: slo-demo-app-requests-availability
+            sloth_service: slo-demo-app
+            sloth_slo: requests-availability
+    - name: sloth-slo-alerts-slo-demo-app-requests-availability
+      rules:
+        - alert: SloAvailabilityFastBurn
+          expr: |
+            (
+              slo:sli_error:ratio_rate5m{sloth_id="slo-demo-app-requests-availability"} > (14.4 * 0.001)
+              and
+              slo:sli_error:ratio_rate1h{sloth_id="slo-demo-app-requests-availability"} > (14.4 * 0.001)
+            )
+          labels:
+            severity: critical
+            sloth_severity: page
+          annotations:
+            summary: "High error budget burn rate detected"
+            description: "SLO is burning error budget 14.4x faster than allowed"
+        - alert: SloAvailabilitySlowBurn
+          expr: |
+            (
+              slo:sli_error:ratio_rate6h{sloth_id="slo-demo-app-requests-availability"} > (6 * 0.001)
+              and
+              slo:sli_error:ratio_rate1d{sloth_id="slo-demo-app-requests-availability"} > (6 * 0.001)
+            )
+          labels:
+            severity: warning
+            sloth_severity: ticket
+          annotations:
+            summary: "Slow error budget burn rate detected"
+            description: "SLO is burning error budget 6x faster than allowed"

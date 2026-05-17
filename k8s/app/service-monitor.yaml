@@ -6,6 +6,9 @@ metadata:
   labels:
     release: kube-prometheus-stack
 spec:
+  namespaceSelector:
+    matchNames:
+      - default
   selector:
     matchLabels:
       app: slo-demo-app
