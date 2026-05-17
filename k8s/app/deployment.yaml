@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slo-demo-app
+  namespace: default
+  labels:
+    app: slo-demo-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: slo-demo-app
+  template:
+    metadata:
+      labels:
+        app: slo-demo-app
+    spec:
+      containers:
+        - name: slo-demo-app
+          image: slo-demo-app:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
