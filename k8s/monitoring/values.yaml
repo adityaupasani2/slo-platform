@@ -22,6 +22,9 @@ prometheus:
     retention: 7d
     scrapeInterval: 15s
     evaluationInterval: 15s
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
 
 alertmanager:
   enabled: true
