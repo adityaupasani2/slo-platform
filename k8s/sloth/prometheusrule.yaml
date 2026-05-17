@@ -108,10 +108,10 @@ spec:
         - alert: SloAvailabilityFastBurn
           expr: |
             (
-              slo:sli_error:ratio_rate5m{sloth_id="slo-demo-app-requests-availability"} > (14.4 * 0.001)
-              and
-              slo:sli_error:ratio_rate1h{sloth_id="slo-demo-app-requests-availability"} > (14.4 * 0.001)
-            )
+            max without(sloth_window) (slo:sli_error:ratio_rate5m{sloth_id="slo-demo-app-requests-availability"} > (14.4 * 0.001))
+            and
+            max without(sloth_window) (slo:sli_error:ratio_rate1h{sloth_id="slo-demo-app-requests-availability"} > (14.4 * 0.001))
+             )
           labels:
             severity: critical
             sloth_severity: page
@@ -120,11 +120,11 @@ spec:
             description: "SLO is burning error budget 14.4x faster than allowed"
         - alert: SloAvailabilitySlowBurn
           expr: |
-            (
-              slo:sli_error:ratio_rate6h{sloth_id="slo-demo-app-requests-availability"} > (6 * 0.001)
+              (
+              max without(sloth_window) (slo:sli_error:ratio_rate6h{sloth_id="slo-demo-app-requests-availability"} > (6 * 0.001))
               and
-              slo:sli_error:ratio_rate1d{sloth_id="slo-demo-app-requests-availability"} > (6 * 0.001)
-            )
+              max without(sloth_window) (slo:sli_error:ratio_rate1d{sloth_id="slo-demo-app-requests-availability"} > (6 * 0.001))
+              )
           labels:
             severity: warning
             sloth_severity: ticket
