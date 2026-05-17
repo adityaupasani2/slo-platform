@@ -1,0 +1,166 @@
+{
+  "title": "SLO Error Budget Dashboard",
+  "uid": "slo-error-budget",
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Error Budget Remaining",
+      "type": "gauge",
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": -1,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 0.25},
+              {"color": "green", "value": 0.5}
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "slo:period_error_budget_remaining:ratio{sloth_id=\"slo-demo-app-requests-availability\"}",
+          "legendFormat": "Error Budget Remaining"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Current Burn Rate",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1},
+              {"color": "red", "value": 14.4}
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "slo:current_burn_rate:ratio{sloth_id=\"slo-demo-app-requests-availability\"}",
+          "legendFormat": "Burn Rate"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "SLI Error Rate (5m)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "red", "value": 0.001}
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "slo:sli_error:ratio_rate5m{sloth_id=\"slo-demo-app-requests-availability\"}",
+          "legendFormat": "Error Rate 5m"
+        },
+        {
+          "expr": "slo:sli_error:ratio_rate1h{sloth_id=\"slo-demo-app-requests-availability\"}",
+          "legendFormat": "Error Rate 1h"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Request Rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "fieldConfig": {
+        "defaults": {"unit": "reqps"}
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(app_requests_total{job=\"slo-demo-app\"}[5m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Request Latency p99",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "fieldConfig": {
+        "defaults": {"unit": "s"}
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(app_request_latency_seconds_bucket{job=\"slo-demo-app\"}[5m])) by (le))",
+          "legendFormat": "p99"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(app_request_latency_seconds_bucket{job=\"slo-demo-app\"}[5m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(app_request_latency_seconds_bucket{job=\"slo-demo-app\"}[5m])) by (le))",
+          "legendFormat": "p50"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "SLO Compliance %",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 0.99},
+              {"color": "green", "value": 0.999}
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "1 - slo:sli_error:ratio_rate1h{sloth_id=\"slo-demo-app-requests-availability\"}",
+          "legendFormat": "SLO Compliance"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 36,
+  "version": 1
+}
