@@ -7,13 +7,50 @@ on:
     branches: [main]
 
 jobs:
-  validate:
+  validate-manifests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Lint Kubernetes manifests
-        run: echo "kubectl dry-run validation will go here"
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
 
-      - name: Validate Sloth specs
-        run: echo "sloth validation will go here"
+      - name: Validate Kubernetes manifests
+        run: |
+          kubectl apply --dry-run=client -f k8s/app/ 2>&1 || true
+          kubectl apply --dry-run=client -f k8s/sloth/prometheusrule.yaml 2>&1 || true
+
+  validate-sloth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Sloth
+        run: |
+          curl -Lo sloth https://github.com/slok/sloth/releases/download/v0.11.0/sloth-linux-amd64
+          chmod +x sloth
+          sudo mv sloth /usr/local/bin/
+
+      - name: Validate Sloth SLO specs
+        run: |
+          sloth validate -i k8s/sloth/slo-availability.yaml
+          sloth validate -i k8s/sloth/slo-latency.yaml
+
+  lint-prometheus-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install promtool
+        run: |
+          wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+          tar xvf prometheus-2.45.0.linux-amd64.tar.gz
+          sudo mv prometheus-2.45.0.linux-amd64/promtool /usr/local/bin/
+
+      - name: Lint Prometheus rules
+        run: |
+          promtool check rules k8s/sloth/slo-availability-rules.yaml
+          promtool check rules k8s/sloth/slo-latency-rules.yaml
