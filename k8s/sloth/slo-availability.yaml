@@ -1,0 +1,25 @@
+version: "prometheus/v1"
+service: "slo-demo-app"
+labels:
+  owner: "platform-team"
+  env: "production"
+slos:
+  - name: "requests-availability"
+    objective: 99.9
+    description: "99.9% of requests to slo-demo-app should be successful"
+    sli:
+      events:
+        error_query: sum(rate(app_requests_total{job="slo-demo-app",status=~"5.."}[{{.window}}]))
+        total_query: sum(rate(app_requests_total{job="slo-demo-app"}[{{.window}}]))
+    alerting:
+      name: SloAvailabilityAlert
+      labels:
+        severity: critical
+      annotations:
+        summary: "SLO availability burn rate is too high"
+      page_alert:
+        labels:
+          severity: critical
+      ticket_alert:
+        labels:
+          severity: warning
