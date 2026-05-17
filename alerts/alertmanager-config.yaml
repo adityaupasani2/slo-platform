@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: slo-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  route:
+    groupBy: ['alertname', 'sloth_service']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 1h
+    receiver: 'default'
+    routes:
+      - matchers:
+          - name: severity
+            value: critical
+        receiver: 'critical-alerts'
+      - matchers:
+          - name: severity
+            value: warning
+        receiver: 'warning-alerts'
+  receivers:
+    - name: 'default'
+    - name: 'critical-alerts'
+    - name: 'warning-alerts'
